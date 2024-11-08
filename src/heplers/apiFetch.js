@@ -1,4 +1,4 @@
-export default async function (method, route, body = null) {
+export default async function (method, route, body = null, isBlob = false) {
     const options = {
         method,
         headers: {
@@ -11,8 +11,12 @@ export default async function (method, route, body = null) {
     }
 
     if (body) {
-        options.headers['Content-Type'] = 'application/json'
-        options.body = JSON.stringify(body)
+        if (body instanceof FormData) {
+            options.body = body
+        } else {
+            options.headers['Content-Type'] = 'application/json'
+            options.body = JSON.stringify(body)
+        }
     }
 
     const response = await fetch(`http://localhost/laravel-edu/public/api-kosmos${route}`, options)
@@ -24,9 +28,12 @@ export default async function (method, route, body = null) {
     }
 
     try {
-        result = await response.json()
-    } catch (e) {
-    }
+        if (isBlob) {
+            result = await response.blob()
+        } else {
+            result = await response.json()
+        }
+    } catch (e) {}
 
     return result
 }
